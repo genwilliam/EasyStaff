@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>EasyStaff 员工管理系统</title>
+</head>
+<body>
+
+<h1>EasyStaff 员工管理系统（示例界面）</h1>
+
+<!-- 登录区域 -->
+<div id="login-section">
+    <h2>登录</h2>
+    <div>
+        <label>用户名：
+            <input type="text" id="username" value="admin">
+        </label>
+    </div>
+    <div>
+        <label>密码：
+            <input type="password" id="password" value="123456">
+        </label>
+    </div>
+    <button id="login-btn">登录</button>
+    <div id="login-error" style="color: red;"></div>
+</div>
+
+<!-- 主功能区域（登录后可见） -->
+<div id="main-section" style="display: none;">
+    <h2>员工列表</h2>
+
+    <!-- 查询条件 -->
+    <div>
+        <label>姓名：
+            <input type="text" id="search-name">
+        </label>
+        <label>职位：
+            <input type="text" id="search-position">
+        </label>
+        <label>入职开始日期：
+            <input type="date" id="search-startDate">
+        </label>
+        <label>入职结束日期：
+            <input type="date" id="search-endDate">
+        </label>
+        <button id="search-btn">查询</button>
+    </div>
+
+    <!-- 添加员工 -->
+    <div style="margin-top: 16px;">
+        <button id="toggle-add-form-btn">添加员工</button>
+    </div>
+    <div id="add-form" style="display: none; margin-top: 8px;">
+        <h3>新增员工</h3>
+        <div>
+            <label>姓名：
+                <input type="text" id="add-name">
+            </label>
+        </div>
+        <div>
+            <label>年龄：
+                <input type="number" id="add-age">
+            </label>
+        </div>
+        <div>
+            <label>职位：
+                <input type="text" id="add-position">
+            </label>
+        </div>
+        <div>
+            <label>入职日期：
+                <input type="date" id="add-entryDate">
+            </label>
+        </div>
+        <button id="add-submit-btn">提交</button>
+        <div id="add-msg" style="color: green;"></div>
+    </div>
+
+    <!-- 员工表格 -->
+    <table border="1" cellspacing="0" cellpadding="4" style="margin-top: 16px;">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>姓名</th>
+            <th>年龄</th>
+            <th>职位</th>
+            <th>入职日期</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="employee-tbody">
+        <!-- 动态渲染 -->
+        </tbody>
+    </table>
+
+    <!-- 分页 -->
+    <div style="margin-top: 8px;">
+        <button id="prev-page-btn">上一页</button>
+        <span id="page-info"></span>
+        <button id="next-page-btn">下一页</button>
+    </div>
+
+    <!-- 详情展示区域 -->
+    <div id="detail-section" style="margin-top: 16px; border: 1px solid #000; padding: 8px; display: none;">
+        <h3>员工详情</h3>
+        <pre id="detail-content" style="white-space: pre-wrap;"></pre>
+        <button id="detail-close-btn">关闭</button>
+    </div>
+
+    <!-- 退出登录 -->
+    <div style="margin-top: 16px;">
+        <button id="logout-btn">退出登录</button>
+    </div>
+</div>
+
+<script>
+    const apiBase = 'http://localhost:8080';
+
+    let currentPage = 1;
+
+    function handleUnauthorized(response) {
+        if (response.status === 401) {
+            // 未登录或登录过期
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('login-error').innerText = '登录已过期，请重新登录';
+            throw new Error('unauthorized');
+        }
+    }
+
+    async function login() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorDiv = document.getElementById('login-error');
+        errorDiv.innerText = '';
+
+        try {
+            const resp = await fetch(apiBase + '/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // 携带 Cookie，维持 Session
+                body: JSON.stringify({username, password})
+            });
+
+            if (!resp.ok) {
+                errorDiv.innerText = '登录失败，请稍后重试';
+                return;
+            }
+            const data = await resp.json();
+            if (data.code !== 0) {
+                errorDiv.innerText = data.msg || '用户名或密码错误';
+                return;
+            }
+
+            // 登录成功
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-section').style.display = 'block';
+            currentPage = 1;
+            await loadEmployees();
+        } catch (e) {
+            console.error(e);
+            errorDiv.innerText = '网络异常，请检查后端是否启动';
+        }
+    }
+
+    async function logout() {
+        try {
+            await fetch(apiBase + '/api/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (e) {
+            console.error(e);
+        } finally {
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+        }
+    }
+
+    async function loadEmployees(page) {
+        if (page) {
+            currentPage = page;
+        }
+
+        const name = document.getElementById('search-name').value.trim();
+        const position = document.getElementById('search-position').value.trim();
+        const startDate = document.getElementById('search-startDate').value;
+        const endDate = document.getElementById('search-endDate').value;
+
+        const params = new URLSearchParams();
+        params.append('page', currentPage);
+        if (name) params.append('name', name);
+        if (position) params.append('position', position);
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        try {
+            const resp = await fetch(apiBase + '/api/employees?' + params.toString(), {
+                credentials: 'include'
+            });
+            handleUnauthorized(resp);
+            if (!resp.ok) {
+                alert('加载员工列表失败');
+                return;
+            }
+            const data = await resp.json();
+            if (data.code !== 0) {
+                alert(data.msg || '加载员工列表失败');
+                return;
+            }
+
+            const pageResult = data.data;
+            const tbody = document.getElementById('employee-tbody');
+            tbody.innerHTML = '';
+
+            (pageResult.list || []).forEach(emp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td>' + emp.id + '</td>' +
+                    '<td>' + (emp.name || '') + '</td>' +
+                    '<td>' + (emp.age || '') + '</td>' +
+                    '<td>' + (emp.position || '') + '</td>' +
+                    '<td>' + (emp.entryDate || '') + '</td>' +
+                    '<td>' +
+                    '<button data-id="' + emp.id + '" class="detail-btn">详情</button> ' +
+                    '<button data-id="' + emp.id + '" class="delete-btn">删除</button>' +
+                    '</td>';
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('page-info').innerText =
+                '当前第 ' + pageResult.page + ' 页，每页 ' + pageResult.pageSize + ' 条，共 ' + pageResult.total + ' 条';
+
+            // 绑定详情和删除按钮事件
+            document.querySelectorAll('.detail-btn').forEach(btn => {
+                btn.addEventListener('click', () => showDetail(btn.getAttribute('data-id')));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteEmployee(btn.getAttribute('data-id')));
+            });
+        } catch (e) {
+            console.error(e);
+            alert('网络异常，请检查后端是否启动');
+        }
+    }
+
+    async function addEmployee() {
+        const name = document.getElementById('add-name').value.trim();
+        const age = document.getElementById('add-age').value;
+        const position = document.getElementById('add-position').value.trim();
+        const entryDate = document.getElementById('add-entryDate').value;
+        const msgDiv = document.getElementById('add-msg');
+        msgDiv.innerText = '';
+
+        if (!name) {
+            alert('姓名不能为空');
+            return;
+        }
+
+        try {
+            const resp = await fetch(apiBase + '/api/employees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    name,
+                    age: age ? parseInt(age, 10) : null,
+                    position,
+                    entryDate
+                })
+            });
+            handleUnauthorized(resp);
+            if (!resp.ok) {
+                alert('添加失败');
+                return;
+            }
+            const data = await resp.json();
+            if (data.code !== 0) {
+                alert(data.msg || '添加失败');
+                return;
+            }
+            msgDiv.innerText = '添加成功';
+
+            // 清空表单并刷新列表
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-age').value = '';
+            document.getElementById('add-position').value = '';
+            document.getElementById('add-entryDate').value = '';
+
+            await loadEmployees(1);
+        } catch (e) {
+            console.error(e);
+            alert('网络异常，请检查后端是否启动');
+        }
+    }
+
+    async function deleteEmployee(id) {
+        if (!confirm('确定删除？')) {
+            return;
+        }
+        try {
+            const resp = await fetch(apiBase + '/api/employees/' + id, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            handleUnauthorized(resp);
+            if (!resp.ok) {
+                alert('删除失败');
+                return;
+            }
+            const data = await resp.json();
+            if (data.code !== 0) {
+                alert(data.msg || '删除失败');
+                return;
+            }
+            await loadEmployees(currentPage);
+        } catch (e) {
+            console.error(e);
+            alert('网络异常，请检查后端是否启动');
+        }
+    }
+
+    async function showDetail(id) {
+        try {
+            const resp = await fetch(apiBase + '/api/employees/' + id, {
+                credentials: 'include'
+            });
+            handleUnauthorized(resp);
+            if (!resp.ok) {
+                alert('加载详情失败');
+                return;
+            }
+            const data = await resp.json();
+            if (data.code !== 0) {
+                alert(data.msg || '加载详情失败');
+                return;
+            }
+            const emp = data.data;
+            const detailSection = document.getElementById('detail-section');
+            const detailContent = document.getElementById('detail-content');
+            detailContent.textContent = JSON.stringify(emp, null, 2);
+            detailSection.style.display = 'block';
+        } catch (e) {
+            console.error(e);
+            alert('网络异常，请检查后端是否启动');
+        }
+    }
+
+    // 事件绑定
+    document.getElementById('login-btn').addEventListener('click', login);
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('search-btn').addEventListener('click', () => loadEmployees(1));
+    document.getElementById('prev-page-btn').addEventListener('click', () => {
+        if (currentPage > 1) {
+            loadEmployees(currentPage - 1);
+        }
+    });
+    document.getElementById('next-page-btn').addEventListener('click', () => {
+        loadEmployees(currentPage + 1);
+    });
+
+    document.getElementById('toggle-add-form-btn').addEventListener('click', () => {
+        const form = document.getElementById('add-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('add-submit-btn').addEventListener('click', addEmployee);
+    document.getElementById('detail-close-btn').addEventListener('click', () => {
+        document.getElementById('detail-section').style.display = 'none';
+    });
+</script>
+
+</body>
+</html>
+
+
