@@ -2,7 +2,6 @@
   <div class="employee-page">
     <h2 class="search-area">员工列表</h2>
 
-    <!-- 查询条件 -->
     <div class="search-area">
       <label>
         姓名：
@@ -27,7 +26,6 @@
       <button @click="loadEmployees(1)">查询</button>
     </div>
 
-    <!-- 添加员工 -->
     <div style="margin-top: 16px">
       <button @click="toggleAddForm">{{ showAddForm ? '关闭表单' : '添加员工' }}</button>
     </div>
@@ -60,16 +58,15 @@
       <p v-if="addMsg" style="color: green">{{ addMsg }}</p>
     </div>
 
-    <!-- 员工表格 -->
     <table class="employee-table">
       <thead>
         <tr>
-          <th>ID</th>
+          <th style="width: 50px">ID</th>
           <th>姓名</th>
           <th>年龄</th>
           <th>职位</th>
           <th>入职日期</th>
-          <th>操作</th>
+          <th style="width: 150px">操作</th>
         </tr>
       </thead>
 
@@ -88,21 +85,18 @@
       </tbody>
     </table>
 
-    <!-- 分页 -->
     <div class="pagination">
       <button @click="prevPage" :disabled="page <= 1">上一页</button>
       <span>当前第 {{ page }} 页 / 共 {{ total }} 条</span>
       <button @click="nextPage">下一页</button>
     </div>
 
-    <!-- 详情 -->
     <div v-if="showDetailBox" class="detail-box">
       <h3>员工详情</h3>
       <pre>{{ JSON.stringify(detailData, null, 2) }}</pre>
       <button @click="showDetailBox = false">关闭</button>
     </div>
 
-    <!-- 退出 -->
     <div style="margin-top: 16px">
       <button @click="logout">退出登录</button>
     </div>
@@ -252,12 +246,7 @@ const logout = async () => {
       method: 'POST',
       credentials: 'include'
     });
-
-    // 清理本地缓存
-    // localStorage.removeItem('user');
-
     alert('已退出登录');
-
     router.push('/login');
   } catch (e) {
     console.error(e);
@@ -274,7 +263,7 @@ onMounted(() => {
 .employee-page {
   padding: 20px;
   font-family: 'Arial', sans-serif;
-  color: #222; /* 全局文字深色，保证可见 */
+  color: #222;
 }
 
 /* 标题 */
@@ -304,7 +293,7 @@ onMounted(() => {
   border-radius: 6px;
   outline: none;
   color: #222;
-  background: white; /* 👈 避免文字沉没 */
+  background: white;
 }
 
 .search-area button {
@@ -365,29 +354,38 @@ onMounted(() => {
   background: #256a26;
 }
 
-/* 表格样式 */
+/* --- 表格样式修改重点开始 --- */
+
 .employee-table {
   margin-top: 20px;
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: collapse; /* 去掉单元格之间的空隙 */
   background: white;
 }
 
-.employee-table th {
-  background: #e7f7e8; /* 表头浅绿色背景 */
+/* 合并 th 和 td 的对齐样式，确保它们完全一致 */
+.employee-table th,
+.employee-table td {
+  text-align: center; /* 核心修改：内容水平居中 */
+  vertical-align: middle; /* 核心修改：内容垂直居中 */
   padding: 10px;
+}
+
+.employee-table th {
+  background: #e7f7e8;
   font-weight: bold;
   color: #2a7f2b;
   border-bottom: 2px solid #2a7f2b;
 }
 
 .employee-table td {
-  padding: 10px;
-  color: #333; /* 深色字体 */
+  color: #333;
   border-bottom: 1px solid #d5e8d6;
 }
 
-/* 行 hover 提升可读性 */
+/* --- 表格样式修改重点结束 --- */
+
+/* 行 hover */
 .employee-table tr:hover {
   background: #f4fbf5;
 }
@@ -400,7 +398,7 @@ onMounted(() => {
   border-radius: 6px;
   color: white;
   cursor: pointer;
-  margin-right: 6px;
+  margin: 0 4px; /* 按钮之间留点缝隙 */
 }
 
 .employee-table button:hover {
