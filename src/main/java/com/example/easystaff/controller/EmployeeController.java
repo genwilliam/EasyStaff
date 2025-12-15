@@ -14,6 +14,7 @@ import java.util.List;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -39,7 +40,10 @@ public class EmployeeController {
      * 新增员工
      */
     @PostMapping
-    public ApiResponse<Void> add(@RequestBody Employee employee) {
+    public ApiResponse<Void> add(@RequestBody Employee employee, HttpSession session) {
+        if (!isAdmin(session)) {
+            return ApiResponse.error("仅管理员可新增");
+        }
         employeeService.addEmployee(employee);
         return ApiResponse.success("添加成功");
     }
@@ -48,7 +52,10 @@ public class EmployeeController {
      * 删除员工
      */
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
+    public ApiResponse<Void> delete(@PathVariable Long id, HttpSession session) {
+        if (!isAdmin(session)) {
+            return ApiResponse.error("仅管理员可删除");
+        }
         employeeService.deleteEmployee(id);
         return ApiResponse.success("删除成功");
     }
@@ -69,7 +76,10 @@ public class EmployeeController {
      * 更新员工信息
      */
     @PutMapping("/{id}")
-    public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Employee employee) {
+    public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Employee employee, HttpSession session) {
+        if (!isAdmin(session)) {
+            return ApiResponse.error("仅管理员可修改");
+        }
         employee.setId(id);
         Employee existing = employeeService.getEmployeeById(id);
         if (existing == null) {
@@ -83,7 +93,10 @@ public class EmployeeController {
      * 批量删除员工
      */
     @DeleteMapping("/batch")
-    public ApiResponse<Void> batchDelete(@RequestBody List<Long> ids) {
+    public ApiResponse<Void> batchDelete(@RequestBody List<Long> ids, HttpSession session) {
+        if (!isAdmin(session)) {
+            return ApiResponse.error("仅管理员可删除");
+        }
         if (ids == null || ids.isEmpty()) {
             return ApiResponse.error("请选择要删除的员工");
         }
@@ -135,6 +148,14 @@ public class EmployeeController {
             return "";
         }
         return String.valueOf(obj).replace(",", " ");
+    }
+
+    private boolean isAdmin(HttpSession session) {
+        Object obj = session != null ? session.getAttribute(UserController.SESSION_USER_KEY) : null;
+        if (obj instanceof com.example.easystaff.domain.User user) {
+            return "ADMIN".equalsIgnoreCase(user.getRole());
+        }
+        return false;
     }
 }
 

@@ -22,17 +22,17 @@
     <div class="search-area">
       <label>
         姓名：
-        <input v-model="query.name" type="text" placeholder="请输入姓名" />
+        <input v-model="query.name" type="text" placeholder="姓名支持模糊" @keyup.enter="loadEmployees(1)" />
       </label>
 
       <label>
         职位：
-        <input v-model="query.position" type="text" placeholder="请输入职位" />
+        <input v-model="query.position" type="text" placeholder="职位支持模糊" @keyup.enter="loadEmployees(1)" />
       </label>
 
       <label>
         状态：
-        <select v-model="query.employmentStatus">
+        <select v-model="query.employmentStatus" @change="loadEmployees(1)">
           <option value="">全部</option>
           <option value="ACTIVE">在职</option>
           <option value="INACTIVE">离职</option>
@@ -41,12 +41,12 @@
 
       <label>
         入职开始日期：
-        <input v-model="query.startDate" type="date" />
+        <input v-model="query.startDate" type="date" @keyup.enter="loadEmployees(1)" />
       </label>
 
       <label>
         入职结束日期：
-        <input v-model="query.endDate" type="date" />
+        <input v-model="query.endDate" type="date" @keyup.enter="loadEmployees(1)" />
       </label>
 
       <label>
@@ -64,15 +64,15 @@
 
     <!-- 操作按钮区域 -->
     <div class="action-buttons">
-      <button @click="toggleAddForm">{{ showAddForm ? '关闭表单' : '添加员工' }}</button>
-      <button @click="batchDelete" :disabled="selectedIds.length === 0" class="batch-delete-btn">
+      <button v-if="isAdmin" @click="toggleAddForm">{{ showAddForm ? '关闭表单' : '添加员工' }}</button>
+      <button v-if="isAdmin" @click="batchDelete" :disabled="selectedIds.length === 0" class="batch-delete-btn">
         批量删除 ({{ selectedIds.length }})
       </button>
       <button @click="exportCsv" class="export-btn">导出当前列表</button>
     </div>
 
     <!-- 添加/编辑员工表单 -->
-    <div v-if="showAddForm || showEditForm" class="form-section">
+    <div v-if="isAdmin && (showAddForm || showEditForm)" class="form-section">
       <h3>{{ showEditForm ? '编辑员工' : '新增员工' }}</h3>
 
       <div class="form-grid">
@@ -133,7 +133,7 @@
       <table class="employee-table">
         <thead>
           <tr>
-            <th style="width: 40px">
+            <th v-if="isAdmin" style="width: 40px">
               <input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected" />
             </th>
             <th style="width: 60px">ID</th>
@@ -151,7 +151,7 @@
 
         <tbody>
           <tr v-for="emp in employees" :key="emp.id">
-            <td>
+            <td v-if="isAdmin">
               <input type="checkbox" :value="emp.id" v-model="selectedIds" />
             </td>
             <td>{{ emp.id }}</td>
@@ -164,9 +164,9 @@
             <td>{{ emp.phone || '-' }}</td>
             <td>{{ emp.entryDate }}</td>
             <td>
-              <button @click="editEmployee(emp)" class="edit-btn">编辑</button>
+              <button v-if="isAdmin" @click="editEmployee(emp)" class="edit-btn">编辑</button>
               <button @click="showDetail(emp.id)" class="detail-btn">详情</button>
-              <button @click="deleteEmployee(emp.id)" class="delete-btn">删除</button>
+              <button v-if="isAdmin" @click="deleteEmployee(emp.id)" class="delete-btn">删除</button>
             </td>
           </tr>
         </tbody>
@@ -252,6 +252,10 @@ const formEmployee = reactive({
   entryDate: ''
 });
 
+// 用户角色
+const currentUser = ref(null);
+const isAdmin = computed(() => currentUser.value && currentUser.value.role === 'ADMIN');
+
 // 批量选择
 const selectedIds = ref([]);
 
@@ -295,6 +299,22 @@ const loadStatistics = async () => {
     statistics.value = res.data;
   } catch (err) {
     console.error('加载统计信息失败:', err);
+  }
+};
+
+const loadCurrentUser = async () => {
+  try {
+    // 优先从接口获取（防止刷新丢失）
+    const res = await api.currentUser();
+    currentUser.value = res.data;
+    // 同步到 localStorage 以便前端使用
+    localStorage.setItem('userInfo', JSON.stringify(res.data));
+  } catch (err) {
+    // 如果未登录或接口失败，尝试本地缓存
+    const cached = localStorage.getItem('userInfo');
+    if (cached) {
+      currentUser.value = JSON.parse(cached);
+    }
   }
 };
 
@@ -502,6 +522,7 @@ const logout = async () => {
 };
 
 onMounted(() => {
+  loadCurrentUser();
   loadEmployees(1);
   loadStatistics();
 });

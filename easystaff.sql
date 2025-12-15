@@ -12,15 +12,17 @@ CREATE TABLE `user` (
     `username`     VARCHAR(50)  NOT NULL COMMENT '用户名',
     `password`     VARCHAR(100) NOT NULL COMMENT '登录密码（示例中为明文）',
     `nickname`     VARCHAR(50)           DEFAULT NULL COMMENT '昵称/姓名',
+    `role`         VARCHAR(20)           DEFAULT 'USER' COMMENT '角色：ADMIN/USER',
     `create_time`  DATETIME              DEFAULT NULL COMMENT '创建时间',
     `update_time`  DATETIME              DEFAULT NULL COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户表';
 
--- 初始化一个管理员账户：用户名 admin / 密码 123456
-INSERT INTO `user` (`username`, `password`, `nickname`, `create_time`, `update_time`)
-VALUES ('admin', '123456', '管理员', NOW(), NOW());
+-- 初始化账户：管理员 admin，普通用户 demo
+INSERT INTO `user` (`username`, `password`, `nickname`, `role`, `create_time`, `update_time`) VALUES
+('admin', '123456', '管理员', 'ADMIN', NOW(), NOW()),
+('demo', '123456', '演示用户', 'USER', NOW(), NOW());
 
 
 -- =========================

@@ -31,6 +31,10 @@ public class SchemaInitializer {
                     ADD COLUMN IF NOT EXISTS email VARCHAR(100) DEFAULT NULL COMMENT '邮箱' AFTER department,
                     ADD COLUMN IF NOT EXISTS phone VARCHAR(20) DEFAULT NULL COMMENT '电话' AFTER email;
                     """);
+            jdbcTemplate.execute("""
+                    ALTER TABLE user
+                    ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'USER' COMMENT '角色';
+                    """);
             log.info("SchemaInitializer: employee 表字段检查完成");
         } catch (Exception e) {
             // 不影响服务启动，记录日志以便排查

@@ -28,6 +28,11 @@ public class User {
     private String nickname;
 
     /**
+     * 角色：ADMIN / USER
+     */
+    private String role;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

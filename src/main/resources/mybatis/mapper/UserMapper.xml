@@ -9,15 +9,21 @@
         <result column="username" property="username"/>
         <result column="password" property="password"/>
         <result column="nickname" property="nickname"/>
+        <result column="role" property="role"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <select id="findByUsername" parameterType="string" resultMap="UserResultMap">
-        SELECT id, username, password, nickname, create_time, update_time
+        SELECT id, username, password, nickname, role, create_time, update_time
         FROM user
         WHERE username = #{username}
     </select>
+
+    <insert id="insert" parameterType="com.example.easystaff.domain.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (username, password, nickname, role, create_time, update_time)
+        VALUES (#{username}, #{password}, #{nickname}, #{role}, NOW(), NOW())
+    </insert>
 
 </mapper>
 

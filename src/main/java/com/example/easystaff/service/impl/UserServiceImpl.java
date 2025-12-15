@@ -30,6 +30,32 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
+
+    @Override
+    public User register(String username, String password, String nickname, String role, User operator) {
+        if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
+            return null;
+        }
+        if (userMapper.findByUsername(username) != null) {
+            return null;
+        }
+
+        String targetRole = "USER";
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            if (operator != null && "ADMIN".equalsIgnoreCase(operator.getRole())) {
+                targetRole = "ADMIN";
+            }
+        }
+
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setPassword(password);
+        newUser.setNickname(StringUtils.hasText(nickname) ? nickname : username);
+        newUser.setRole(targetRole);
+
+        userMapper.insert(newUser);
+        return newUser;
+    }
 }
 
 

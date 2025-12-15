@@ -11,6 +11,11 @@ public interface UserMapper {
      * 根据用户名查询用户
      */
     User findByUsername(@Param("username") String username);
+
+    /**
+     * 新增用户
+     */
+    int insert(User user);
 }
 
 

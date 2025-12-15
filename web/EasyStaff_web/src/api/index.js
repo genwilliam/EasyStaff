@@ -11,6 +11,16 @@ const api = {
     return http.post('/api/logout');
   },
 
+  // 注册
+  register(data) {
+    return http.post('/api/register', data);
+  },
+
+  // 当前用户
+  currentUser() {
+    return http.get('/api/current-user');
+  },
+
   // 获取员工列表（带分页 & 查询）
   getEmployees(params) {
     return http.get('/api/employees', params);
