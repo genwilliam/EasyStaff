@@ -29,6 +29,26 @@ public class Employee {
     private String position;
 
     /**
+     * 在职状态：ACTIVE / INACTIVE
+     */
+    private String employmentStatus;
+
+    /**
+     * 部门
+     */
+    private String department;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 电话
+     */
+    private String phone;
+
+    /**
      * 入职日期
      */
     private LocalDate entryDate;

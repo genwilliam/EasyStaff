@@ -46,6 +46,10 @@ const http = {
   get(url, params = {}) {
     return request.get(url, { params });
   },
+  // 下载文件（返回 blob）
+  download(url, params = {}) {
+    return request.get(url, { params, responseType: 'blob' }).then(res => res.data);
+  },
   post(url, data = {}) {
     return request.post(url, data);
   },

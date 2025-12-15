@@ -9,6 +9,10 @@
         <result column="name" property="name"/>
         <result column="age" property="age"/>
         <result column="position" property="position"/>
+        <result column="employment_status" property="employmentStatus"/>
+        <result column="department" property="department"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
         <result column="entry_date" property="entryDate"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -21,6 +25,9 @@
             </if>
             <if test="position != null and position != ''">
                 AND position = #{position}
+            </if>
+            <if test="employmentStatus != null and employmentStatus != ''">
+                AND employment_status = #{employmentStatus}
             </if>
             <if test="startDate != null">
                 AND entry_date &gt;= #{startDate}
@@ -38,7 +45,7 @@
     </select>
 
     <select id="findPageByCondition" resultMap="EmployeeResultMap">
-        SELECT id, name, age, position, entry_date, create_time, update_time
+        SELECT id, name, age, position, employment_status, department, email, phone, entry_date, create_time, update_time
         FROM employee
         <include refid="EmployeeWhere"/>
         ORDER BY id DESC
@@ -46,8 +53,8 @@
     </select>
 
     <insert id="insert" parameterType="com.example.easystaff.domain.Employee" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO employee (name, age, position, entry_date, create_time, update_time)
-        VALUES (#{name}, #{age}, #{position}, #{entryDate}, NOW(), NOW())
+        INSERT INTO employee (name, age, position, employment_status, department, email, phone, entry_date, create_time, update_time)
+        VALUES (#{name}, #{age}, #{position}, #{employmentStatus}, #{department}, #{email}, #{phone}, #{entryDate}, NOW(), NOW())
     </insert>
 
     <delete id="deleteById" parameterType="long">
@@ -55,9 +62,49 @@
     </delete>
 
     <select id="findById" parameterType="long" resultMap="EmployeeResultMap">
-        SELECT id, name, age, position, entry_date, create_time, update_time
+        SELECT id, name, age, position, employment_status, department, email, phone, entry_date, create_time, update_time
         FROM employee
         WHERE id = #{id}
+    </select>
+
+    <update id="update" parameterType="com.example.easystaff.domain.Employee">
+        UPDATE employee
+        SET name = #{name},
+            age = #{age},
+            position = #{position},
+            employment_status = #{employmentStatus},
+            department = #{department},
+            email = #{email},
+            phone = #{phone},
+            entry_date = #{entryDate},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM employee WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="countTotal" resultType="long">
+        SELECT COUNT(*) FROM employee
+    </select>
+
+    <select id="countByPosition" resultType="java.util.HashMap">
+        SELECT position, COUNT(*) as count
+        FROM employee
+        WHERE position IS NOT NULL
+        GROUP BY position
+        ORDER BY count DESC
+    </select>
+
+    <select id="findByCondition" resultMap="EmployeeResultMap">
+        SELECT id, name, age, position, employment_status, department, email, phone, entry_date, create_time, update_time
+        FROM employee
+        <include refid="EmployeeWhere"/>
+        ORDER BY id DESC
     </select>
 
 </mapper>

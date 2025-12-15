@@ -25,6 +25,26 @@ public interface EmployeeService {
      * 查询员工详情
      */
     Employee getEmployeeById(Long id);
+
+    /**
+     * 更新员工信息
+     */
+    void updateEmployee(Employee employee);
+
+    /**
+     * 批量删除员工
+     */
+    void deleteEmployees(java.util.List<Long> ids);
+
+    /**
+     * 获取员工统计信息
+     */
+    java.util.Map<String, Object> getStatistics();
+
+    /**
+     * 查询用于导出的员工列表（按条件）
+     */
+    java.util.List<Employee> listForExport(com.example.easystaff.dto.EmployeeQueryRequest request);
 }
 
 

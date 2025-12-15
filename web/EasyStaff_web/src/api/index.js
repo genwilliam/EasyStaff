@@ -29,6 +29,26 @@ const api = {
   // 详情
   getEmployeeDetail(id) {
     return http.get(`/api/employees/${id}`);
+  },
+
+  // 更新员工
+  updateEmployee(id, data) {
+    return http.put(`/api/employees/${id}`, data);
+  },
+
+  // 批量删除员工
+  batchDeleteEmployees(ids) {
+    return http.delete('/api/employees/batch', ids);
+  },
+
+  // 获取员工统计信息
+  getEmployeeStatistics() {
+    return http.get('/api/employees/statistics');
+  },
+
+  // 导出员工列表为 CSV（按查询条件）
+  exportEmployees(params) {
+    return http.download('/api/employees/export', params);
   }
 };
 

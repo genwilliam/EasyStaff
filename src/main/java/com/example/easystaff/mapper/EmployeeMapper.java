@@ -15,6 +15,7 @@ public interface EmployeeMapper {
      */
     long countByCondition(@Param("name") String name,
                           @Param("position") String position,
+                          @Param("employmentStatus") String employmentStatus,
                           @Param("startDate") LocalDate startDate,
                           @Param("endDate") LocalDate endDate);
 
@@ -23,10 +24,20 @@ public interface EmployeeMapper {
      */
     List<Employee> findPageByCondition(@Param("name") String name,
                                        @Param("position") String position,
+                                       @Param("employmentStatus") String employmentStatus,
                                        @Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate,
                                        @Param("offset") int offset,
                                        @Param("limit") int limit);
+
+    /**
+     * 条件查询全量列表（用于导出）
+     */
+    List<Employee> findByCondition(@Param("name") String name,
+                                   @Param("position") String position,
+                                   @Param("employmentStatus") String employmentStatus,
+                                   @Param("startDate") LocalDate startDate,
+                                   @Param("endDate") LocalDate endDate);
 
     /**
      * 新增员工
@@ -42,6 +53,26 @@ public interface EmployeeMapper {
      * 根据主键查询详情
      */
     Employee findById(@Param("id") Long id);
+
+    /**
+     * 更新员工信息
+     */
+    int update(Employee employee);
+
+    /**
+     * 批量删除员工
+     */
+    int deleteByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 统计总员工数
+     */
+    long countTotal();
+
+    /**
+     * 按职位统计员工数量
+     */
+    List<java.util.Map<String, Object>> countByPosition();
 }
 
 

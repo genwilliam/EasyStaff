@@ -8,7 +8,9 @@ import com.example.easystaff.service.EmployeeService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -26,12 +28,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         String name = request.getName();
         String position = request.getPosition();
+        String employmentStatus = request.getEmploymentStatus();
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
 
-        long total = employeeMapper.countByCondition(name, position, startDate, endDate);
+        long total = employeeMapper.countByCondition(name, position, employmentStatus, startDate, endDate);
         int offset = (page - 1) * pageSize;
-        List<Employee> list = employeeMapper.findPageByCondition(name, position, startDate, endDate, offset, pageSize);
+        List<Employee> list = employeeMapper.findPageByCondition(name, position, employmentStatus, startDate, endDate, offset, pageSize);
 
         PageResult<Employee> pageResult = new PageResult<>();
         pageResult.setList(list);
@@ -43,6 +46,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void addEmployee(Employee employee) {
+        if (employee.getEmploymentStatus() == null || employee.getEmploymentStatus().isEmpty()) {
+            employee.setEmploymentStatus("ACTIVE");
+        }
         employeeMapper.insert(employee);
     }
 
@@ -54,6 +60,47 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee getEmployeeById(Long id) {
         return employeeMapper.findById(id);
+    }
+
+    @Override
+    public void updateEmployee(Employee employee) {
+        if (employee.getEmploymentStatus() == null || employee.getEmploymentStatus().isEmpty()) {
+            employee.setEmploymentStatus("ACTIVE");
+        }
+        employeeMapper.update(employee);
+    }
+
+    @Override
+    public void deleteEmployees(List<Long> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            employeeMapper.deleteByIds(ids);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
+        
+        // 总员工数
+        long total = employeeMapper.countTotal();
+        statistics.put("total", total);
+        
+        // 按职位统计
+        List<Map<String, Object>> positionStats = employeeMapper.countByPosition();
+        statistics.put("positionStats", positionStats);
+        
+        return statistics;
+    }
+
+    @Override
+    public List<Employee> listForExport(EmployeeQueryRequest request) {
+        String name = request.getName();
+        String position = request.getPosition();
+        String employmentStatus = request.getEmploymentStatus();
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+
+        return employeeMapper.findByCondition(name, position, employmentStatus, startDate, endDate);
     }
 }
 

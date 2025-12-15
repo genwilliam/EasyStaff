@@ -6,8 +6,14 @@ import com.example.easystaff.dto.EmployeeQueryRequest;
 import com.example.easystaff.dto.PageResult;
 import com.example.easystaff.service.EmployeeService;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
+
+import java.util.List;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -57,6 +63,78 @@ public class EmployeeController {
             return ApiResponse.error("员工不存在");
         }
         return ApiResponse.success(employee);
+    }
+
+    /**
+     * 更新员工信息
+     */
+    @PutMapping("/{id}")
+    public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Employee employee) {
+        employee.setId(id);
+        Employee existing = employeeService.getEmployeeById(id);
+        if (existing == null) {
+            return ApiResponse.error("员工不存在");
+        }
+        employeeService.updateEmployee(employee);
+        return ApiResponse.success("更新成功");
+    }
+
+    /**
+     * 批量删除员工
+     */
+    @DeleteMapping("/batch")
+    public ApiResponse<Void> batchDelete(@RequestBody List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return ApiResponse.error("请选择要删除的员工");
+        }
+        employeeService.deleteEmployees(ids);
+        return ApiResponse.success("批量删除成功");
+    }
+
+    /**
+     * 获取员工统计信息
+     */
+    @GetMapping("/statistics")
+    public ApiResponse<java.util.Map<String, Object>> statistics() {
+        java.util.Map<String, Object> statistics = employeeService.getStatistics();
+        return ApiResponse.success(statistics);
+    }
+
+    /**
+     * 导出当前查询结果为 CSV
+     */
+    @GetMapping("/export")
+    public void export(@Valid EmployeeQueryRequest request, HttpServletResponse response) throws IOException {
+        List<Employee> employees = employeeService.listForExport(request);
+
+        String filename = URLEncoder.encode("employees.csv", StandardCharsets.UTF_8);
+        response.setContentType("text/csv;charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+
+        String header = "ID,姓名,年龄,职位,状态,部门,邮箱,电话,入职日期,创建时间,更新时间\n";
+        response.getWriter().write(header);
+        for (Employee emp : employees) {
+            response.getWriter().write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
+                    safe(emp.getId()),
+                    safe(emp.getName()),
+                    safe(emp.getAge()),
+                    safe(emp.getPosition()),
+                    safe(emp.getEmploymentStatus()),
+                    safe(emp.getDepartment()),
+                    safe(emp.getEmail()),
+                    safe(emp.getPhone()),
+                    safe(emp.getEntryDate()),
+                    safe(emp.getCreateTime()),
+                    safe(emp.getUpdateTime())));
+        }
+        response.getWriter().flush();
+    }
+
+    private String safe(Object obj) {
+        if (obj == null) {
+            return "";
+        }
+        return String.valueOf(obj).replace(",", " ");
     }
 }
 

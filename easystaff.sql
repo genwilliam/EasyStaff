@@ -1,4 +1,5 @@
 -- 数据库：请先确保已创建数据库 easystaff（或按需修改）
+drop database if exists easystaff;
 CREATE DATABASE easystaff CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE easystaff;
 
@@ -31,6 +32,10 @@ CREATE TABLE `employee` (
     `name`        VARCHAR(50)  NOT NULL COMMENT '员工姓名',
     `age`         INT                   DEFAULT NULL COMMENT '年龄',
     `position`    VARCHAR(50)           DEFAULT NULL COMMENT '职位',
+    `employment_status` VARCHAR(20) DEFAULT 'ACTIVE' COMMENT '在职状态',
+    `department`  VARCHAR(50)           DEFAULT NULL COMMENT '部门',
+    `email`       VARCHAR(100)          DEFAULT NULL COMMENT '邮箱',
+    `phone`       VARCHAR(20)           DEFAULT NULL COMMENT '电话',
     `entry_date`  DATE                  DEFAULT NULL COMMENT '入职日期',
     `create_time` DATETIME              DEFAULT NULL COMMENT '创建时间',
     `update_time` DATETIME              DEFAULT NULL COMMENT '更新时间',

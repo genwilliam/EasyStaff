@@ -32,6 +32,11 @@ public class EmployeeQueryRequest {
     private String position;
 
     /**
+     * 在职状态：ACTIVE / INACTIVE
+     */
+    private String employmentStatus;
+
+    /**
      * 入职开始日期
      */
     @DateTimeFormat(pattern = "yyyy-MM-dd")
