@@ -49,6 +49,15 @@
         <input v-model="query.endDate" type="date" />
       </label>
 
+      <label>
+        每页条数：
+        <select v-model.number="query.pageSize">
+          <option :value="4">4</option>
+          <option :value="10">10</option>
+          <option :value="20">20</option>
+        </select>
+      </label>
+
       <button @click="loadEmployees(1)">查询</button>
       <button @click="resetQuery">重置</button>
     </div>
@@ -221,7 +230,8 @@ const query = reactive({
   position: '',
   employmentStatus: '',
   startDate: '',
-  endDate: ''
+  endDate: '',
+  pageSize: 4
 });
 
 // 表单相关
@@ -261,6 +271,7 @@ const loadEmployees = async (p = 1) => {
   try {
     const params = {
       page: page.value,
+      pageSize: query.pageSize || 4,
       name: query.name || undefined,
       position: query.position || undefined,
       employmentStatus: query.employmentStatus || undefined,
@@ -435,6 +446,7 @@ const resetQuery = () => {
   query.employmentStatus = '';
   query.startDate = '';
   query.endDate = '';
+  query.pageSize = 4;
   loadEmployees(1);
 };
 
@@ -444,7 +456,7 @@ const prevPage = () => {
 };
 
 const nextPage = () => {
-  if (page.value * 4 < total.value) loadEmployees(page.value + 1);
+  if (page.value * query.pageSize < total.value) loadEmployees(page.value + 1);
 };
 
 // 导出 CSV
@@ -455,7 +467,8 @@ const exportCsv = async () => {
       position: query.position || undefined,
       employmentStatus: query.employmentStatus || undefined,
       startDate: query.startDate || undefined,
-      endDate: query.endDate || undefined
+      endDate: query.endDate || undefined,
+      pageSize: query.pageSize || 4
     };
     const res = await api.exportEmployees(params);
     const blob = new Blob([res], { type: 'text/csv;charset=utf-8;' });

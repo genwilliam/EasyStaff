@@ -24,7 +24,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public PageResult<Employee> queryPage(EmployeeQueryRequest request) {
         int page = request.getPage() == null || request.getPage() < 1 ? 1 : request.getPage();
-        int pageSize = 4; // 需求：每页固定 4 条
+        int pageSize = request.getPageSize() == null || request.getPageSize() < 1 ? 4 : request.getPageSize();
+        pageSize = Math.min(pageSize, 50); // 限制最大 50 条，防止一次拉取过多
 
         String name = request.getName();
         String position = request.getPosition();

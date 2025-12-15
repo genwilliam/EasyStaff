@@ -48,7 +48,7 @@
         SELECT id, name, age, position, employment_status, department, email, phone, entry_date, create_time, update_time
         FROM employee
         <include refid="EmployeeWhere"/>
-        ORDER BY id DESC
+        ORDER BY id ASC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
@@ -104,7 +104,7 @@
         SELECT id, name, age, position, employment_status, department, email, phone, entry_date, create_time, update_time
         FROM employee
         <include refid="EmployeeWhere"/>
-        ORDER BY id DESC
+        ORDER BY id ASC
     </select>
 
 </mapper>
