@@ -16,6 +16,7 @@ public interface EmployeeMapper {
     long countByCondition(@Param("name") String name,
                           @Param("position") String position,
                           @Param("employmentStatus") String employmentStatus,
+                          @Param("department") String department,
                           @Param("startDate") LocalDate startDate,
                           @Param("endDate") LocalDate endDate);
 
@@ -25,6 +26,7 @@ public interface EmployeeMapper {
     List<Employee> findPageByCondition(@Param("name") String name,
                                        @Param("position") String position,
                                        @Param("employmentStatus") String employmentStatus,
+                                       @Param("department") String department,
                                        @Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate,
                                        @Param("offset") int offset,
@@ -36,6 +38,7 @@ public interface EmployeeMapper {
     List<Employee> findByCondition(@Param("name") String name,
                                    @Param("position") String position,
                                    @Param("employmentStatus") String employmentStatus,
+                                   @Param("department") String department,
                                    @Param("startDate") LocalDate startDate,
                                    @Param("endDate") LocalDate endDate);
 
@@ -73,6 +76,15 @@ public interface EmployeeMapper {
      * 按职位统计员工数量
      */
     List<java.util.Map<String, Object>> countByPosition();
+
+    /**
+     * 批量更新员工
+     */
+    int batchUpdate(@Param("ids") List<Long> ids,
+                    @Param("department") String department,
+                    @Param("position") String position,
+                    @Param("employmentStatus") String employmentStatus,
+                    @Param("entryDate") LocalDate entryDate);
 }
 
 

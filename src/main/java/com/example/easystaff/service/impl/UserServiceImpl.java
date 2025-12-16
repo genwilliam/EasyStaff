@@ -56,6 +56,53 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(newUser);
         return newUser;
     }
+
+    @Override
+    public com.example.easystaff.dto.PageResult<User> listUsers(com.example.easystaff.dto.UserQueryRequest request) {
+        int page = request.getPage() == null || request.getPage() < 1 ? 1 : request.getPage();
+        int pageSize = request.getPageSize() == null || request.getPageSize() < 1 ? 10 : request.getPageSize();
+        pageSize = Math.min(pageSize, 100);
+
+        String username = request.getUsername();
+        String role = request.getRole();
+
+        long total = userMapper.count(username, role);
+        int offset = (page - 1) * pageSize;
+        java.util.List<User> list = userMapper.findPage(username, role, offset, pageSize);
+
+        com.example.easystaff.dto.PageResult<User> pageResult = new com.example.easystaff.dto.PageResult<>();
+        pageResult.setList(list);
+        pageResult.setTotal(total);
+        pageResult.setPage(page);
+        pageResult.setPageSize(pageSize);
+        return pageResult;
+    }
+
+    @Override
+    public boolean resetPassword(Long userId, String newPassword, User operator) {
+        if (operator == null || !"ADMIN".equalsIgnoreCase(operator.getRole())) {
+            return false;
+        }
+        if (!StringUtils.hasText(newPassword) || userId == null) {
+            return false;
+        }
+        return userMapper.updatePassword(userId, newPassword) > 0;
+    }
+
+    @Override
+    public boolean updateRole(Long userId, String role, User operator) {
+        if (operator == null || !"ADMIN".equalsIgnoreCase(operator.getRole())) {
+            return false;
+        }
+        if (!StringUtils.hasText(role) || userId == null) {
+            return false;
+        }
+        String upper = role.toUpperCase();
+        if (!"ADMIN".equals(upper) && !"USER".equals(upper)) {
+            return false;
+        }
+        return userMapper.updateRole(userId, upper) > 0;
+    }
 }
 
 

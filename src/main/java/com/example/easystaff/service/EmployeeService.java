@@ -45,6 +45,16 @@ public interface EmployeeService {
      * 查询用于导出的员工列表（按条件）
      */
     java.util.List<Employee> listForExport(com.example.easystaff.dto.EmployeeQueryRequest request);
+
+    /**
+     * 批量更新员工
+     */
+    void batchUpdate(com.example.easystaff.dto.EmployeeBatchUpdateRequest request);
+
+    /**
+     * 导入员工（返回成功条数）
+     */
+    int importEmployees(java.io.InputStream inputStream) throws java.io.IOException;
 }
 
 

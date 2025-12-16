@@ -25,6 +25,39 @@
         VALUES (#{username}, #{password}, #{nickname}, #{role}, NOW(), NOW())
     </insert>
 
+    <sql id="UserWhere">
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="role != null and role != ''">
+                AND role = #{role}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findPage" resultMap="UserResultMap">
+        SELECT id, username, password, nickname, role, create_time, update_time
+        FROM user
+        <include refid="UserWhere"/>
+        ORDER BY id ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM user
+        <include refid="UserWhere"/>
+    </select>
+
+    <update id="updatePassword">
+        UPDATE user SET password = #{password}, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateRole">
+        UPDATE user SET role = #{role}, update_time = NOW() WHERE id = #{id}
+    </update>
+
 </mapper>
 
 

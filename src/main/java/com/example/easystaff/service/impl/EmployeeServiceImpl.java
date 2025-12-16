@@ -8,9 +8,13 @@ import com.example.easystaff.service.EmployeeService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.read.listener.PageReadListener;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -30,12 +34,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         String name = request.getName();
         String position = request.getPosition();
         String employmentStatus = request.getEmploymentStatus();
+        String department = request.getDepartment();
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
 
-        long total = employeeMapper.countByCondition(name, position, employmentStatus, startDate, endDate);
+        long total = employeeMapper.countByCondition(name, position, employmentStatus, department, startDate, endDate);
         int offset = (page - 1) * pageSize;
-        List<Employee> list = employeeMapper.findPageByCondition(name, position, employmentStatus, startDate, endDate, offset, pageSize);
+        List<Employee> list = employeeMapper.findPageByCondition(name, position, employmentStatus, department, startDate, endDate, offset, pageSize);
 
         PageResult<Employee> pageResult = new PageResult<>();
         pageResult.setList(list);
@@ -98,10 +103,34 @@ public class EmployeeServiceImpl implements EmployeeService {
         String name = request.getName();
         String position = request.getPosition();
         String employmentStatus = request.getEmploymentStatus();
+        String department = request.getDepartment();
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
 
-        return employeeMapper.findByCondition(name, position, employmentStatus, startDate, endDate);
+        return employeeMapper.findByCondition(name, position, employmentStatus, department, startDate, endDate);
+    }
+
+    @Override
+    public void batchUpdate(com.example.easystaff.dto.EmployeeBatchUpdateRequest request) {
+        if (request == null || request.getIds() == null || request.getIds().isEmpty()) {
+            return;
+        }
+        employeeMapper.batchUpdate(request.getIds(), request.getDepartment(), request.getPosition(), request.getEmploymentStatus(), request.getEntryDate());
+    }
+
+    @Override
+    public int importEmployees(java.io.InputStream inputStream) throws java.io.IOException {
+        java.util.List<Employee> buffer = new java.util.ArrayList<>();
+        com.alibaba.excel.EasyExcel.read(inputStream, Employee.class, new com.alibaba.excel.read.listener.PageReadListener<Employee>(buffer::addAll)).sheet().doRead();
+        int success = 0;
+        for (Employee emp : buffer) {
+            if (emp.getEmploymentStatus() == null || emp.getEmploymentStatus().isEmpty()) {
+                emp.setEmploymentStatus("ACTIVE");
+            }
+            employeeMapper.insert(emp);
+            success++;
+        }
+        return success;
     }
 }
 

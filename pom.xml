@@ -45,6 +45,13 @@
             <version>${mybatis-spring-boot.version}</version>
         </dependency>
 
+        <!-- Excel 解析（用于员工批量导入） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.3.4</version>
+        </dependency>
+
         <!-- MySQL 驱动（你可以按需修改为自己的数据库） -->
         <dependency>
             <groupId>com.mysql</groupId>

@@ -29,6 +29,9 @@
             <if test="employmentStatus != null and employmentStatus != ''">
                 AND employment_status = #{employmentStatus}
             </if>
+            <if test="department != null and department != ''">
+                AND department = #{department}
+            </if>
             <if test="startDate != null">
                 AND entry_date &gt;= #{startDate}
             </if>
@@ -106,6 +109,29 @@
         <include refid="EmployeeWhere"/>
         ORDER BY id ASC
     </select>
+
+    <update id="batchUpdate">
+        UPDATE employee
+        <set>
+            <if test="department != null and department != ''">
+                department = #{department},
+            </if>
+            <if test="position != null and position != ''">
+                position = #{position},
+            </if>
+            <if test="employmentStatus != null and employmentStatus != ''">
+                employment_status = #{employmentStatus},
+            </if>
+            <if test="entryDate != null">
+                entry_date = #{entryDate},
+            </if>
+            update_time = NOW()
+        </set>
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
 
 </mapper>
 

@@ -2,6 +2,7 @@ package com.example.easystaff.controller;
 
 import com.example.easystaff.domain.Employee;
 import com.example.easystaff.dto.ApiResponse;
+import com.example.easystaff.dto.EmployeeBatchUpdateRequest;
 import com.example.easystaff.dto.EmployeeQueryRequest;
 import com.example.easystaff.dto.PageResult;
 import com.example.easystaff.service.EmployeeService;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -102,6 +104,40 @@ public class EmployeeController {
         }
         employeeService.deleteEmployees(ids);
         return ApiResponse.success("批量删除成功");
+    }
+
+    /**
+     * 批量更新员工
+     */
+    @PutMapping("/batch")
+    public ApiResponse<Void> batchUpdate(@RequestBody EmployeeBatchUpdateRequest request, HttpSession session) {
+        if (!isAdmin(session)) {
+            return ApiResponse.error("仅管理员可修改");
+        }
+        if (request.getIds() == null || request.getIds().isEmpty()) {
+            return ApiResponse.error("请选择要更新的员工");
+        }
+        employeeService.batchUpdate(request);
+        return ApiResponse.success("批量更新成功");
+    }
+
+    /**
+     * Excel 导入员工
+     */
+    @PostMapping("/import")
+    public ApiResponse<String> importEmployees(@RequestPart("file") MultipartFile file, HttpSession session) {
+        if (!isAdmin(session)) {
+            return ApiResponse.error("仅管理员可导入");
+        }
+        if (file == null || file.isEmpty()) {
+            return ApiResponse.error("请上传文件");
+        }
+        try {
+            int success = employeeService.importEmployees(file.getInputStream());
+            return ApiResponse.success("导入成功：" + success + " 条");
+        } catch (IOException e) {
+            return ApiResponse.error("导入失败：" + e.getMessage());
+        }
     }
 
     /**

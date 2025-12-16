@@ -16,6 +16,29 @@ public interface UserMapper {
      * 新增用户
      */
     int insert(User user);
+
+    /**
+     * 分页查询用户
+     */
+    java.util.List<User> findPage(@Param("username") String username,
+                                  @Param("role") String role,
+                                  @Param("offset") int offset,
+                                  @Param("limit") int limit);
+
+    /**
+     * 统计用户数量
+     */
+    long count(@Param("username") String username, @Param("role") String role);
+
+    /**
+     * 重置密码
+     */
+    int updatePassword(@Param("id") Long id, @Param("password") String password);
+
+    /**
+     * 更新角色
+     */
+    int updateRole(@Param("id") Long id, @Param("role") String role);
 }
 
 

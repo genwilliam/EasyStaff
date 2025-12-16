@@ -31,6 +31,11 @@
       </label>
 
       <label>
+        部门：
+        <input v-model="query.department" type="text" placeholder="部门" @keyup.enter="loadEmployees(1)" />
+      </label>
+
+      <label>
         状态：
         <select v-model="query.employmentStatus" @change="loadEmployees(1)">
           <option value="">全部</option>
@@ -68,7 +73,30 @@
       <button v-if="isAdmin" @click="batchDelete" :disabled="selectedIds.length === 0" class="batch-delete-btn">
         批量删除 ({{ selectedIds.length }})
       </button>
+      <button v-if="isAdmin" @click="toggleArchive">{{ isArchiveView ? '返回全部' : '离职归档视图' }}</button>
+      <label v-if="isAdmin" class="import-btn">
+        导入 Excel
+        <input type="file" accept=".xlsx,.xls" @change="importEmployees" />
+      </label>
       <button @click="exportCsv" class="export-btn">导出当前列表</button>
+    </div>
+
+    <div v-if="isAdmin" class="batch-update-box">
+      <h4>批量更新选中员工（{{ selectedIds.length }}）</h4>
+      <div class="batch-grid">
+        <label>部门：<input v-model="batchUpdateForm.department" placeholder="保持不变则留空" /></label>
+        <label>职位：<input v-model="batchUpdateForm.position" placeholder="保持不变则留空" /></label>
+        <label>
+          状态：
+          <select v-model="batchUpdateForm.employmentStatus">
+            <option value="">不变</option>
+            <option value="ACTIVE">在职</option>
+            <option value="INACTIVE">离职</option>
+          </select>
+        </label>
+        <label>入职日期：<input v-model="batchUpdateForm.entryDate" type="date" /></label>
+      </div>
+      <button class="batch-apply" :disabled="selectedIds.length === 0" @click="batchUpdateEmployees">应用批量更新</button>
     </div>
 
     <!-- 添加/编辑员工表单 -->
@@ -229,6 +257,7 @@ const query = reactive({
   name: '',
   position: '',
   employmentStatus: '',
+  department: '',
   startDate: '',
   endDate: '',
   pageSize: 4
@@ -267,6 +296,15 @@ const isAllSelected = computed(() => {
 const showDetailBox = ref(false);
 const detailData = ref({});
 
+// 批量编辑
+const batchUpdateForm = reactive({
+  department: '',
+  position: '',
+  employmentStatus: '',
+  entryDate: ''
+});
+const isArchiveView = ref(false);
+
 // ----------- API 调用 -------------
 
 const loadEmployees = async (p = 1) => {
@@ -279,6 +317,7 @@ const loadEmployees = async (p = 1) => {
       name: query.name || undefined,
       position: query.position || undefined,
       employmentStatus: query.employmentStatus || undefined,
+      department: query.department || undefined,
       startDate: query.startDate || undefined,
       endDate: query.endDate || undefined
     };
@@ -393,6 +432,35 @@ const batchDelete = async () => {
   }
 };
 
+const batchUpdateEmployees = async () => {
+  if (selectedIds.value.length === 0) {
+    alert('请选择要更新的员工');
+    return;
+  }
+  if (
+    !batchUpdateForm.department &&
+    !batchUpdateForm.position &&
+    !batchUpdateForm.employmentStatus &&
+    !batchUpdateForm.entryDate
+  ) {
+    alert('请至少填写一个要更新的字段');
+    return;
+  }
+  try {
+    await api.batchUpdateEmployees({
+      ids: selectedIds.value,
+      department: batchUpdateForm.department || undefined,
+      position: batchUpdateForm.position || undefined,
+      employmentStatus: batchUpdateForm.employmentStatus || undefined,
+      entryDate: batchUpdateForm.entryDate || undefined
+    });
+    alert('批量更新成功');
+    loadEmployees(page.value);
+  } catch (err) {
+    alert(err.message || '批量更新失败');
+  }
+};
+
 const showDetail = async id => {
   try {
     const res = await api.getEmployeeDetail(id);
@@ -464,9 +532,11 @@ const resetQuery = () => {
   query.name = '';
   query.position = '';
   query.employmentStatus = '';
+  query.department = '';
   query.startDate = '';
   query.endDate = '';
   query.pageSize = 4;
+  isArchiveView.value = false;
   loadEmployees(1);
 };
 
@@ -486,6 +556,7 @@ const exportCsv = async () => {
       name: query.name || undefined,
       position: query.position || undefined,
       employmentStatus: query.employmentStatus || undefined,
+      department: query.department || undefined,
       startDate: query.startDate || undefined,
       endDate: query.endDate || undefined,
       pageSize: query.pageSize || 4
@@ -518,6 +589,33 @@ const logout = async () => {
     router.push('/login');
   } catch (e) {
     console.error(e);
+  }
+};
+
+const toggleArchive = () => {
+  if (isArchiveView.value) {
+    query.employmentStatus = '';
+  } else {
+    query.employmentStatus = 'INACTIVE';
+  }
+  isArchiveView.value = !isArchiveView.value;
+  loadEmployees(1);
+};
+
+const importEmployees = async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    await api.importEmployees(formData);
+    alert('导入完成');
+    loadEmployees(1);
+    loadStatistics();
+  } catch (err) {
+    alert(err.message || '导入失败');
+  } finally {
+    event.target.value = '';
   }
 };
 
@@ -692,6 +790,54 @@ onMounted(() => {
 
 .export-btn:hover {
   background: #1976d2 !important;
+}
+
+.import-btn {
+  background: #10b981 !important;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.import-btn input {
+  display: none;
+}
+
+.batch-update-box {
+  background: #f8fff8;
+  border: 1px solid #b6e3b8;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.batch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.batch-grid input,
+.batch-grid select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #2a7f2b;
+  border-radius: 6px;
+}
+
+.batch-apply {
+  background: #2a7f2b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 /* 表单区域 */

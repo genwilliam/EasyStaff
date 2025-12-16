@@ -37,6 +37,11 @@ public class EmployeeQueryRequest {
     private String employmentStatus;
 
     /**
+     * 部门
+     */
+    private String department;
+
+    /**
      * 入职开始日期
      */
     @DateTimeFormat(pattern = "yyyy-MM-dd")

@@ -14,6 +14,21 @@ public interface UserService {
      * 非管理员只能创建 USER；管理员可指定 ADMIN/USER
      */
     User register(String username, String password, String nickname, String role, User operator);
+
+    /**
+     * 管理员分页查询用户
+     */
+    com.example.easystaff.dto.PageResult<User> listUsers(com.example.easystaff.dto.UserQueryRequest request);
+
+    /**
+     * 管理员重置密码
+     */
+    boolean resetPassword(Long userId, String newPassword, User operator);
+
+    /**
+     * 管理员调整角色
+     */
+    boolean updateRole(Long userId, String role, User operator);
 }
 
 

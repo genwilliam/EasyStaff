@@ -83,8 +83,9 @@ const handleLogin = async () => {
 
     localStorage.setItem('userInfo', JSON.stringify(res.data));
 
-    // 跳转到员工列表页
-    router.push('/employees');
+    // 根据角色跳转
+    const target = res.data.role === 'ADMIN' ? '/admin/users' : '/employees';
+    router.push(target);
   } catch (err: any) {
     console.error(err);
     errorMsg.value = err.message || '登录失败，请稍后重试';
