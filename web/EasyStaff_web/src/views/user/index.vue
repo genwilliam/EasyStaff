@@ -22,12 +22,12 @@
     <div class="search-area">
       <label>
         姓名：
-        <input v-model="query.name" type="text" placeholder="姓名支持模糊" @keyup.enter="loadEmployees(1)" />
+        <input v-model="query.name" type="text" placeholder="姓名" @keyup.enter="loadEmployees(1)" />
       </label>
 
       <label>
         职位：
-        <input v-model="query.position" type="text" placeholder="职位支持模糊" @keyup.enter="loadEmployees(1)" />
+        <input v-model="query.position" type="text" placeholder="职位" @keyup.enter="loadEmployees(1)" />
       </label>
 
       <label>
@@ -77,7 +77,7 @@
 
       <div class="form-grid">
         <label>
-          姓名：<span class="required">*</span>
+          姓名：
           <input v-model="formEmployee.name" type="text" required />
         </label>
 

@@ -13,7 +13,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 放行所有预检请求（CORS 预检使用 OPTIONS）
+        // 放行所有预检请求
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
