@@ -15,6 +15,15 @@
       <div id="login-section">
         <h2>登录</h2>
 
+        <div class="role-switch">
+          <button :class="['role-btn', selectedRole === 'ADMIN' ? 'active' : '']" @click="setRole('ADMIN')">
+            管理员
+          </button>
+          <button :class="['role-btn', selectedRole === 'USER' ? 'active' : '']" @click="setRole('USER')">
+            普通用户
+          </button>
+        </div>
+
         <div class="input-group">
           <label>用户名：</label>
           <input type="text" v-model="username" />
@@ -34,7 +43,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api';
 
@@ -43,6 +52,20 @@ const router = useRouter();
 const username = ref('admin');
 const password = ref('123456');
 const errorMsg = ref('');
+const selectedRole = ref<'ADMIN' | 'USER'>('ADMIN');
+
+const rolePresets = {
+  ADMIN: { username: 'admin', password: '123456' },
+  USER: { username: 'demo', password: '123456' }
+} as const;
+
+const setRole = (role: 'ADMIN' | 'USER') => {
+  selectedRole.value = role;
+  const preset = rolePresets[role];
+  username.value = preset.username;
+  password.value = preset.password;
+  errorMsg.value = '';
+};
 
 const handleLogin = async () => {
   errorMsg.value = '';
@@ -52,6 +75,11 @@ const handleLogin = async () => {
       username: username.value,
       password: password.value
     });
+
+    if (res.data?.role && res.data.role !== selectedRole.value) {
+      errorMsg.value = `该账号属于${res.data.role === 'ADMIN' ? '管理员' : '普通用户'}，请切换上方身份后再登录`;
+      return;
+    }
 
     localStorage.setItem('userInfo', JSON.stringify(res.data));
 
@@ -66,6 +94,10 @@ const handleLogin = async () => {
 const goRegister = () => {
   router.push('/register');
 };
+
+onMounted(() => {
+  setRole(selectedRole.value);
+});
 </script>
 <style scoped>
 /* 整体容器：水平双栏布局 */
@@ -125,6 +157,37 @@ const goRegister = () => {
   text-align: center;
   color: #2e7d32;
   margin-bottom: 22px;
+}
+
+.role-switch {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  background: #f6fff7;
+  color: #2e7d32;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.role-btn.active {
+  border-color: #43a047;
+  background: linear-gradient(135deg, #e7f9e7, #d0f3d2);
+  box-shadow: 0 4px 10px rgba(67, 160, 71, 0.2);
+}
+
+.role-desc {
+  display: block;
+  font-size: 12px;
+  color: #5e8f61;
+  margin-top: 4px;
 }
 
 .input-group {
