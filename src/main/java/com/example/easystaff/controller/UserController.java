@@ -11,13 +11,7 @@ import com.example.easystaff.dto.UserQueryRequest;
 import com.example.easystaff.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -77,6 +71,16 @@ public class UserController {
         User operator = (User) session.getAttribute(SESSION_USER_KEY);
         boolean ok = userService.updateRole(id, request.getRole(), operator);
         return ok ? ApiResponse.success("更新成功") : ApiResponse.error("更新失败或无权限");
+    }
+
+    /**
+     * 管理员：删除用户（仅 admin 账户可删）
+     */
+    @DeleteMapping("/users/{id}")
+    public ApiResponse<Void> deleteUser(@PathVariable("id") Long id, HttpSession session) {
+        User operator = (User) session.getAttribute(SESSION_USER_KEY);
+        boolean ok = userService.deleteUser(id, operator);
+        return ok ? ApiResponse.success("删除成功") : ApiResponse.error("删除失败或无权限");
     }
 
     /**

@@ -39,6 +39,11 @@ public interface UserMapper {
      * 更新角色
      */
     int updateRole(@Param("id") Long id, @Param("role") String role);
+
+    /**
+     * 删除用户
+     */
+    int deleteById(@Param("id") Long id);
 }
 
 

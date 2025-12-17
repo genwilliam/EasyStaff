@@ -2,6 +2,24 @@
   <div class="user-admin">
     <h2>账户管理</h2>
 
+    <div class="create-box">
+      <h3>创建用户</h3>
+      <div class="create-grid">
+        <label>用户名：<input v-model="createForm.username" placeholder="必填" /></label>
+        <label>密码：<input type="password" v-model="createForm.password" placeholder="必填" /></label>
+        <label>昵称：<input v-model="createForm.nickname" placeholder="可选" /></label>
+        <label>
+          角色：
+          <select v-model="createForm.role">
+            <option value="USER">普通用户</option>
+            <option value="ADMIN">管理员</option>
+          </select>
+        </label>
+      </div>
+      <button class="create-btn" @click="createUser">创建</button>
+      <p v-if="createMsg" :class="createMsgType">{{ createMsg }}</p>
+    </div>
+
     <div class="search-bar">
       <label>
         用户名：
@@ -43,6 +61,7 @@
             </td>
             <td>
               <button @click="openReset(user)">重置密码</button>
+              <button v-if="isSuperAdmin" @click="removeUser(user)" class="danger">删除</button>
             </td>
           </tr>
         </tbody>
@@ -70,7 +89,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, computed } from 'vue';
 import api from '@/api';
 
 const query = reactive({
@@ -83,10 +102,25 @@ const users = ref([]);
 const page = ref(1);
 const total = ref(0);
 
+const isSuperAdmin = computed(() => {
+  const cached = localStorage.getItem('userInfo');
+  const info = cached ? JSON.parse(cached) : null;
+  return info && info.username === 'admin';
+});
+
 const showResetDialog = ref(false);
 const resetPassword = ref('');
 const currentUser = ref(null);
 const dialogMsg = ref('');
+
+const createForm = reactive({
+  username: '',
+  password: '',
+  nickname: '',
+  role: 'USER'
+});
+const createMsg = ref('');
+const createMsgType = ref('success');
 
 const loadUsers = async (p = 1) => {
   page.value = p;
@@ -153,6 +187,51 @@ const changeRole = async user => {
   }
 };
 
+const removeUser = async user => {
+  if (!isSuperAdmin.value) {
+    alert('只有 admin 可以删除用户');
+    return;
+  }
+  if (user.username === 'admin') {
+    alert('不能删除超级管理员');
+    return;
+  }
+  if (!confirm(`确定删除用户 ${user.username} 吗？`)) return;
+  try {
+    await api.deleteUser(user.id);
+    alert('删除成功');
+    loadUsers(page.value);
+  } catch (err) {
+    alert(err.message || '删除失败');
+  }
+};
+
+const createUser = async () => {
+  if (!createForm.username || !createForm.password) {
+    createMsg.value = '用户名和密码必填';
+    createMsgType.value = 'error';
+    return;
+  }
+  try {
+    await api.createUser({
+      username: createForm.username,
+      password: createForm.password,
+      nickname: createForm.nickname,
+      role: createForm.role
+    });
+    createMsg.value = '创建成功';
+    createMsgType.value = 'success';
+    createForm.username = '';
+    createForm.password = '';
+    createForm.nickname = '';
+    createForm.role = 'USER';
+    loadUsers(1);
+  } catch (err) {
+    createMsg.value = err.message || '创建失败';
+    createMsgType.value = 'error';
+  }
+};
+
 onMounted(() => {
   loadUsers(1);
 });
@@ -163,6 +242,46 @@ onMounted(() => {
   padding: 20px;
   background: #f7f9fb;
   min-height: calc(100vh - 56px);
+}
+
+.create-box {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.create-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.create-grid input,
+.create-grid select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.create-btn {
+  padding: 8px 14px;
+  border: none;
+  background: #16a34a;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.create-box p.success {
+  color: green;
+}
+
+.create-box p.error {
+  color: red;
 }
 
 .search-bar {
@@ -275,6 +394,10 @@ th {
   color: white;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.danger {
+  background: #dc2626 !important;
 }
 
 .dialog-msg {

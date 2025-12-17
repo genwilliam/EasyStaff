@@ -36,6 +36,11 @@ const api = {
     return http.post(`/api/users/${id}/role`, data);
   },
 
+  // 删除用户（仅 admin）
+  deleteUser(id) {
+    return http.delete(`/api/users/${id}`);
+  },
+
   // 创建用户（管理员）
   createUser(data) {
     return http.post('/api/users', data);

@@ -29,6 +29,11 @@ public interface UserService {
      * 管理员调整角色
      */
     boolean updateRole(Long userId, String role, User operator);
+
+    /**
+     * 删除用户（仅超级管理员 admin 允许）
+     */
+    boolean deleteUser(Long userId, User operator);
 }
 
 

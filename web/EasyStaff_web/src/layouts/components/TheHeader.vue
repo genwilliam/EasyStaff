@@ -1,10 +1,10 @@
 <template>
   <header class="layout-header">
-    <div class="brand-logo" @click="goEmployees">
+    <div class="brand-logo" @click="goHome">
       <span class="icon">📡</span>
       <span class="text">员工管理</span>
     </div>
-    <nav class="nav">
+    <nav v-if="isAuthed && !isLoginView" class="nav">
       <button v-if="isAdmin" @click="goAdmin">账户管理</button>
       <button @click="goEmployees">员工列表</button>
     </nav>
@@ -13,12 +13,19 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const router = useRouter();
-const cached = localStorage.getItem('userInfo');
-const userInfo = cached ? JSON.parse(cached) : null;
-const isAdmin = computed(() => userInfo && userInfo.role === 'ADMIN');
+const route = useRoute();
+
+const userInfo = computed(() => {
+  const cached = localStorage.getItem('userInfo');
+  return cached ? JSON.parse(cached) : null;
+});
+
+const isAuthed = computed(() => !!userInfo.value);
+const isAdmin = computed(() => userInfo.value && userInfo.value.role === 'ADMIN');
+const isLoginView = computed(() => route.name === 'login' || route.name === 'register');
 
 const goAdmin = () => {
   router.push('/admin/users');
@@ -26,6 +33,14 @@ const goAdmin = () => {
 
 const goEmployees = () => {
   router.push('/employees');
+};
+
+const goHome = () => {
+  if (isAuthed.value) {
+    goEmployees();
+  } else {
+    router.push('/login');
+  }
 };
 </script>
 

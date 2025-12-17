@@ -103,6 +103,18 @@ public class UserServiceImpl implements UserService {
         }
         return userMapper.updateRole(userId, upper) > 0;
     }
+
+    @Override
+    public boolean deleteUser(Long userId, User operator) {
+        if (userId == null) {
+            return false;
+        }
+        // 仅用户名为 admin 的超级管理员允许删除
+        if (operator == null || !"admin".equalsIgnoreCase(operator.getUsername())) {
+            return false;
+        }
+        return userMapper.deleteById(userId) > 0;
+    }
 }
 
 

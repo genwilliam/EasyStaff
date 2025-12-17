@@ -58,6 +58,10 @@
         UPDATE user SET role = #{role}, update_time = NOW() WHERE id = #{id}
     </update>
 
+    <delete id="deleteById">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+
 </mapper>
 
 
